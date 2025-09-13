@@ -38,24 +38,6 @@ st.markdown("""
       margin: 1rem 0;
       word-break: break-all;
   }
-  .strength-meter {
-      height: 20px;
-      border-radius: 10px;
-      margin: 10px 0;
-  }
-  .metric-card {
-      background-color: white;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      text-align: center;
-  }
-  .sidebar-section {
-      background-color: #f8f9fa;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-  }
   .progress-bar {
       background-color: #f0f0f0;
       border-radius: 10px;
@@ -82,13 +64,6 @@ st.markdown("""
   .success-box {
       background-color: #d4edda;
       border: 1px solid #c3e6cb;
-      border-radius: 8px;
-      padding: 1rem;
-      margin: 1rem 0;
-  }
-  .danger-box {
-      background-color: #f8d7da;
-      border: 1px solid #f5c6cb;
       border-radius: 8px;
       padding: 1rem;
       margin: 1rem 0;
@@ -158,35 +133,30 @@ class PasswordGenerator:
       context_patterns = {
           'banking': {
               'prefix': ['Bank', 'Secure', 'Safe', 'Trust', 'Vault', 'Guard'],
-              'suffix': ['$ecure', 'Bank$', 'Safe#', 'Protect'],
               'symbols': ['$', '#', '@', '&', '!'],
               'numbers': True,
               'complexity': 'high'
           },
           'social_media': {
               'prefix': ['Social', 'Connect', 'Share', 'Like', 'Follow', 'Post'],
-              'suffix': ['Social!', 'Connect#', 'Share@'],
-              'symbols': ['!', '@', '#', '♥', '★'],
+              'symbols': ['!', '@', '#'],
               'numbers': True,
               'complexity': 'medium'
           },
           'work': {
               'prefix': ['Work', 'Office', 'Pro', 'Team', 'Project', 'Task'],
-              'suffix': ['Work.', 'Pro_', 'Team#'],
               'symbols': ['-', '_', '.', '#'],
               'numbers': True,
               'complexity': 'medium'
           },
           'gaming': {
               'prefix': ['Game', 'Play', 'Win', 'Epic', 'Hero', 'Quest'],
-              'suffix': ['Game!', 'Win#', 'Epic*', 'Hero@'],
               'symbols': ['!', '@', '#', '*', '+'],
               'numbers': True,
               'complexity': 'medium'
           },
           'email': {
               'prefix': ['Mail', 'Email', 'Msg', 'Send', 'Inbox', 'Letter'],
-              'suffix': ['Mail.', 'Email@', 'Send_'],
               'symbols': ['.', '@', '_', '-'],
               'numbers': True,
               'complexity': 'medium'
@@ -197,7 +167,7 @@ class PasswordGenerator:
       
       # Simular procesamiento de IA
       with st.spinner(f"🤖 Analizando contexto '{context}'..."):
-          time.sleep(0.8)  # Simular tiempo de procesamiento IA
+          time.sleep(0.8)
       
       # Construir contraseña contextual
       prefix = random.choice(pattern['prefix'])
@@ -284,10 +254,10 @@ class SecurityAnalyzer:
           feedback.append("🚫 Evita secuencias obvias")
           
       # Bonificaciones
-      if len(set(password)) > len(password) * 0.7:  # Diversidad de caracteres
+      if len(set(password)) > len(password) * 0.7:
           score += 10
           
-      if not re.search(r'(.)\1{2,}', password):  # Sin repeticiones
+      if not re.search(r'(.)\1{2,}', password):
           score += 5
       else:
           feedback.append("🔄 Evita repetir caracteres consecutivos")
@@ -364,8 +334,6 @@ if 'analyzer' not in st.session_state:
   st.session_state.analyzer = SecurityAnalyzer()
 if 'password_history' not in st.session_state:
   st.session_state.password_history = []
-if 'total_generated' not in st.session_state:
-  st.session_state.total_generated = 0
 
 # Header principal
 st.markdown("""
@@ -433,18 +401,6 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("### 🛡️ Opciones de Seguridad")
 auto_analyze = st.sidebar.checkbox("Análisis automático", True)
 show_strength_meter = st.sidebar.checkbox("Mostrar medidor de fuerza", True)
-show_tips = st.sidebar.checkbox("Mostrar consejos", True)
-
-# Estadísticas en sidebar
-if st.session_state.password_history:
-  st.sidebar.markdown("### 📊 Estadísticas de Sesión")
-  st.sidebar.metric("Contraseñas Generadas", len(st.session_state.password_history))
-  
-  # Calcular fortaleza promedio
-  scores = [p.get('analysis', {}).get('score', 0) for p in st.session_state.password_history if p.get('analysis')]
-  if scores:
-      avg_score = sum(scores) / len(scores)
-      st.sidebar.metric("Fortaleza Promedio", f"{avg_score:.1f}/100")
 
 # Layout principal
 col1, col2 = st.columns([2, 1])
@@ -453,9 +409,7 @@ with col1:
   st.markdown("## 🚀 Generador de Contraseñas")
   
   # Botón principal de generación
-  generate_button = st.button("🎯 Generar Contraseña", type="primary", use_container_width=True)
-  
-  if generate_button:
+  if st.button("🎯 Generar Contraseña", type="primary", use_container_width=True):
       try:
           if mode == "🎲 Clásico":
               password = st.session_state.generator.generate_classic(
@@ -486,7 +440,6 @@ with col1:
           
           st.session_state.current_password = password
           st.session_state.current_analysis = analysis
-          st.session_state.total_generated += 1
           
       except Exception as e:
           st.error(f"Error al generar contraseña: {str(e)}")
@@ -495,21 +448,18 @@ with col1:
   if hasattr(st.session_state, 'current_password'):
       st.markdown("### 🔑 Contraseña Generada")
       
-      # Display de la contraseña con botón de copia
-      password_container = st.container()
-      with password_container:
-          st.markdown(f"""
-          <div class="password-display">
-              <strong>{st.session_state.current_password}</strong>
-          </div>
-          """, unsafe_allow_html=True)
+      # Display de la contraseña
+      st.markdown(f"""
+      <div class="password-display">
+          <strong>{st.session_state.current_password}</strong>
+      </div>
+      """, unsafe_allow_html=True)
       
       # Botones de acción
       col_copy, col_regenerate, col_analyze, col_clear = st.columns(4)
       
       with col_copy:
           if st.button("📋 Copiar", use_container_width=True):
-              # Simular copia al portapapeles
               st.success("✅ ¡Copiado!")
               st.balloons()
       
@@ -558,25 +508,8 @@ with col1:
           with metric_cols[3]:
               st.metric("Tiempo de Cracking", analysis['estimated_crack_time'])
           
-          # Información adicional
-          info_cols = st.columns(2)
-          with info_cols[0]:
-              st.metric("Longitud", len(st.session_state.current_password))
-              st.metric("Caracteres únicos", len(set(st.session_state.current_password)))
-          with info_cols[1]:
-              has_upper = bool(re.search(r'[A-Z]', st.session_state.current_password))
-              has_lower = bool(re.search(r'[a-z]', st.session_state.current_password))
-              has_digits = bool(re.search(r'\d', st.session_state.current_password))
-              has_symbols = bool(re.search(r'[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]', st.session_state.current_password))
-              
-              types = sum([has_upper, has_lower, has_digits, has_symbols])
-              st.metric("Tipos de caracteres", f"{types}/4")
-              
-              complexity = "Alta" if types >= 3 else "Media" if types >= 2 else "Baja"
-              st.metric("Complejidad", complexity)
-          
           # Feedback y recomendaciones
-          if analysis['feedback'] and show_tips:
+          if analysis['feedback']:
               st.markdown("#### 💡 Recomendaciones para Mejorar")
               for tip in analysis['feedback']:
                   st.markdown(f"""
@@ -585,7 +518,7 @@ with col1:
                   </div>
                   """, unsafe_allow_html=True)
           elif analysis['score'] >= 80:
-              st.markdown(f"""
+              st.markdown("""
               <div class="success-box">
                   🎉 ¡Excelente! Esta contraseña tiene una seguridad muy alta.
               </div>
@@ -594,7 +527,7 @@ with col1:
 with col2:
   st.markdown("## 📈 Panel de Control")
   
-  # Botón de generación rápida
+  # Botones de generación rápida
   st.markdown("### ⚡ Generación Rápida")
   quick_cols = st.columns(2)
   
@@ -616,7 +549,6 @@ with col2:
   st.markdown("### 📝 Historial Reciente")
   
   if st.session_state.password_history:
-      # Mostrar últimas 5 contraseñas
       recent_passwords = list(reversed(st.session_state.password_history[-5:]))
       
       for i, entry in enumerate(recent_passwords):
@@ -642,41 +574,120 @@ with col2:
           st.session_state.password_history = []
           st.success("✅ Historial limpiado")
           st.rerun()
-  
-  # Estadísticas adicionales
-  if len(st.session_state.password_history) > 0:
-      st.markdown("### 📊 Estadísticas Detalladas")
-      
-      # Distribución por modo
-      modes = [p['mode'] for p in st.session_state.password_history]
-      mode_counts = {mode: modes.count(mode) for mode in set(modes)}
-      
-      st.markdown("**Por Modo:**")
-      for mode, count in mode_counts.items():
-          st.write(f"• {mode}: {count}")
-      
-      # Fortaleza promedio
-      scores = [p.get('analysis', {}).get('score', 0) for p in st.session_state.password_history if p.get('analysis')]
-      if scores:
-          avg_score = sum(scores) / len(scores)
-          max_score = max(scores)
-          min_score = min(scores)
-          
-          st.markdown("**Fortaleza:**")
-          st.write(f"• Promedio: {avg_score:.1f}/100")
-          st.write(f"• Máxima: {max_score}/100")
-          st.write(f"• Mínima: {min_score}/100")
 
 # Footer con tabs adicionales
 st.markdown("---")
 
 # Tabs adicionales
-tab1, tab2, tab3, tab4 = st.tabs(["🛡️ Consejos de Seguridad", "🔧 Herramientas", "📚 Guía de Uso", "ℹ️ Acerca de"])
+tab1, tab2, tab3, tab4 = st.tabs(["🛡️ Consejos", "🔧 Herramientas", "📚 Guía", "ℹ️ Info"])
 
 with tab1:
-  st.markdown("""
-  ### 🛡️ Mejores Prácticas de Seguridad
+  st.markdown("### 🛡️ Consejos de Seguridad")
   
-  #### ✅ Recomendaciones Principales:
-  - **Longitud mínima**: 12 caracteres (ideal 16+)
-  - **Diversidad**: Combina may
+  col_a, col_b = st.columns(2)
+  
+  with col_a:
+      st.markdown("#### ✅ Buenas Prácticas:")
+      st.markdown("""
+      - Usar contraseñas únicas para cada cuenta
+      - Mínimo 12 caracteres de longitud
+      - Combinar mayúsculas, minúsculas, números y símbolos
+      - Activar autenticación de dos factores (2FA)
+      - Usar un gestor de contraseñas
+      - Cambiar contraseñas comprometidas inmediatamente
+      """)
+  
+  with col_b:
+      st.markdown("#### ❌ Evitar:")
+      st.markdown("""
+      - Información personal (nombres, fechas)
+      - Contraseñas comunes (123456, password)
+      - Reutilizar contraseñas entre sitios
+      - Compartir por email o mensajes
+      - Secuencias obvias (abc123, qwerty)
+      - Almacenar en archivos de texto plano
+      """)
+
+with tab2:
+  st.markdown("### 🔧 Herramientas Adicionales")
+  
+  # Verificador de contraseñas existentes
+  st.markdown("#### 🔍 Analizar Contraseña Existente")
+  existing_password = st.text_input("Ingresa una contraseña para analizar:", type="password")
+  
+  if existing_password and st.button("Analizar Contraseña"):
+      analysis = st.session_state.analyzer.analyze_strength(existing_password)
+      
+      col_a, col_b = st.columns(2)
+      with col_a:
+          st.metric("Puntuación", f"{analysis['score']}/100")
+          st.metric("Fortaleza", analysis['strength'])
+      with col_b:
+          st.metric("Tiempo de Cracking", analysis['estimated_crack_time'])
+          st.metric("Longitud", len(existing_password))
+      
+      if analysis['feedback']:
+          st.markdown("**Recomendaciones:**")
+          for tip in analysis['feedback']:
+              st.warning(f"• {tip}")
+  
+  # Generador de múltiples contraseñas
+  st.markdown("#### 🎯 Generación en Lote")
+  batch_count = st.number_input("Cantidad de contraseñas", 1, 10, 3)
+  
+  if st.button("Generar Lote"):
+      st.markdown("**Contraseñas generadas:**")
+      for i in range(batch_count):
+          password = st.session_state.generator.generate_classic(16, True, True, True, True)
+          analysis = st.session_state.analyzer.analyze_strength(password)
+          st.code(f"{i+1}. {password} (Fortaleza: {analysis['strength']})")
+
+with tab3:
+  st.markdown("### 📚 Guía de Uso")
+  
+  st.markdown("#### 🎯 Modos de Generación:")
+  
+  st.markdown("**🎲 Modo Clásico**")
+  st.markdown("Genera contraseñas aleatorias tradicionales con control total sobre los caracteres incluidos.")
+  
+  st.markdown("**🧠 Modo IA Contextual**")
+  st.markdown("Utiliza inteligencia artificial simulada para crear contraseñas optimizadas según el contexto de uso.")
+  
+  st.markdown("**💭 Modo Memorable**")
+  st.markdown("Crea contraseñas usando palabras comunes que son más fáciles de recordar.")
+  
+  st.markdown("**📝 Modo Frase de Contraseña**")
+  st.markdown("Genera frases completas que son seguras y relativamente fáciles de recordar.")
+
+with tab4:
+  st.markdown("### ℹ️ Acerca de SmartPass AI")
+  
+  st.markdown("""
+  **SmartPass AI** es un generador de contraseñas inteligente que combina algoritmos 
+  de seguridad criptográfica con inteligencia artificial para crear contraseñas 
+  seguras y personalizadas.
+  
+  #### 🔧 Características:
+  - Generación criptográficamente segura
+  - Análisis de fortaleza multi-criterio
+  - IA contextual adaptativa
+  - Interfaz intuitiva y moderna
+  - Sin almacenamiento permanente
+  
+  #### 🛡️ Seguridad:
+  - Las contraseñas se generan localmente
+  - No se envían datos a servidores externos
+  - Historial solo durante la sesión
+  - Código abierto y auditable
+  
+  **Versión**: 1.0.0 | **Desarrollado con**: Streamlit + Python
+  """)
+
+# Footer final
+st.markdown("---")
+st.markdown("""
+<div style="text-align: center; color: #666;">
+  <p>🔐 SmartPass AI - Generador Inteligente de Contraseñas</p>
+  <p>Desarrollado con ❤️ usando Streamlit | © 2024</p>
+</div>
+""", unsafe_allow_html=True)
